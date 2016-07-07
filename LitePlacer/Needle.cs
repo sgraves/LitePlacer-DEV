@@ -20,6 +20,7 @@ namespace LitePlacer
         }
 
 		public List<NeedlePoint> CalibrationPoints = new List<NeedlePoint>();
+        public NeedlePoint CalibrationPointsCenter = new NeedlePoint();
 
         private Camera Cam;
         private CNC Cnc;
@@ -247,6 +248,60 @@ namespace LitePlacer
                 Point.Y = Y * Properties.Settings.Default.UpCam_YmmPerPixel;
 				// MainForm.DisplayText("A: " + Point.Angle.ToString("0.000") + ", X: " + Point.X.ToString("0.000") + ", Y: " + Point.Y.ToString("0.000"));
                 CalibrationPoints.Add(Point);
+            }
+            /*********************************************************************************
+             * Here we are going to calculate the center of the calibration points.  It will
+             * be the center of the line connecting each two points that are 180 degrees apart.
+             * We are assuming that the points are on even spacing, cover 360 degrees and that
+             * there are an even number of points.  For example, 16 points with 22.5 degree
+             * spacing will work.  In the ideal world all of the centers will be at the same
+             * point.  But to account for some variation we will take the average of all the
+             * centers.  To do that we will sum all of the points in the following loop and
+             * divide the sum by the loop count
+             * 
+             * A little more discussion here to validate my thinking for my present self and to
+             * let my future self and other programmers know what is happening.  The coordinate
+             * system is setup by the camera and is relative to the camera.  But the working
+             * part of the PNP is the needle.  We need a precise reference from the camera
+             * position to the needle position.  The needle position wobbles as it is rotated.
+             * We have calculated the center of that wobble and will be setting our needle
+             * correction relative to that center.  The idea being that even a new needle will
+             * wobble about that same point. Now the most important consideration is the sign
+             * of the correction.  The present logic is that the correction factors are added
+             * to the move.  Subtracting the center from the points gives us the right polarity
+             * for a correction factor will be added to compensate.  Then when we set the 
+             * needle to camera offset we need to subtract the correction factor from the 
+             * needle position to give us the point to be used in the offset calculations
+             ********************************************************************************/
+            // There are half as many lines as there are points
+            int HalfCount = CalibrationPoints.Count / 2;
+            CalibrationPointsCenter.X = 0;
+            CalibrationPointsCenter.Y = 0;
+            for (int i = 0; i < HalfCount; i++)
+            {
+                //The following block could be used if one is anal about validating the situation
+                //if(CalibrationPoints[i + HalfCount].Angle - CalibrationPoints[i + HalfCount].Angle != 180)
+                //{
+                //    Calibrated = false;
+                //    return false;
+                //}
+                CalibrationPointsCenter.X += (CalibrationPoints[i].X + CalibrationPoints[i + HalfCount].X) / 2;
+                CalibrationPointsCenter.Y += (CalibrationPoints[i].Y + CalibrationPoints[i + HalfCount].Y) / 2;
+            }
+            CalibrationPointsCenter.X /= HalfCount;
+            CalibrationPointsCenter.Y /= HalfCount;
+            /**********************************************************************************
+             * The previous technique was calculating the correction based on the needle being
+             * near the center of the screen at rotation 0.  Effectively we are normalizing to
+             * a point in the center of the distribution of points.  Instead of changing the
+             * CorrectedPosition_m routine, we can normalize the values here and leave that
+             * routine alone.
+             **********************************************************************************/
+            for (int i = 0; i < CalibrationPoints.Count; i++)
+            {
+                NeedlePoint Point = CalibrationPoints[i];
+                Point.X -= CalibrationPointsCenter.X;
+                Point.Y -= CalibrationPointsCenter.Y;
             }
             Calibrated = true;
             return true;
