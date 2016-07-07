@@ -3414,7 +3414,7 @@ namespace LitePlacer
                     SelectCamera(UpCamera);
                     //SetNeedleMeasurement();
                     NeedleOffset_label.Visible = true;
-                    NeedleOffset_label.Text = "Click \"Next\" when needle is in position for wobble calibration.";
+                    NeedleOffset_label.Text = "Click \"Next\" when in position for wobble calibration.";
                     SetNeedleOffset_stage = 1;
                     Offset2Method_button.Text = "Next";
                     break;
