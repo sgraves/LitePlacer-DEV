@@ -8692,6 +8692,26 @@ namespace LitePlacer
             DownCamera.DrawArrow = false;
         }
 
+        // =================================================================================
+        private void UpdateLocation_button_Click(object sender, EventArgs e)
+        {
+            double diffX;
+            double diffY;
+            double dNomX;
+            double dNomY;
+            double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["X_machine"].Value.ToString(), out diffX);
+            double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["Y_machine"].Value.ToString(), out diffY);
+            double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["X_nominal"].Value.ToString(), out dNomX);
+            double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["Y_nominal"].Value.ToString(), out dNomY);
+            diffX -= Cnc.CurrentX;
+            diffY -= Cnc.CurrentY;
+            dNomX -= diffX;
+            dNomY -= diffY;
+            CadData_GridView.CurrentCell.OwningRow.Cells["X_machine"].Value = Cnc.CurrentX.ToString("0.000", CultureInfo.InvariantCulture);
+            CadData_GridView.CurrentCell.OwningRow.Cells["Y_machine"].Value = Cnc.CurrentY.ToString("0.000", CultureInfo.InvariantCulture);
+            CadData_GridView.CurrentCell.OwningRow.Cells["X_nominal"].Value = dNomX.ToString("0.000", CultureInfo.InvariantCulture);
+            CadData_GridView.CurrentCell.OwningRow.Cells["Y_nominal"].Value = dNomY.ToString("0.000", CultureInfo.InvariantCulture);
+        }
 
         // =================================================================================
         // Checks what is needed to check before doing something for a single component selected at "CAD data" table. 
