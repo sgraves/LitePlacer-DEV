@@ -10377,6 +10377,9 @@ namespace LitePlacer
             PlaceHereAdjX = Cnc.CurrentX;
             PlaceHereAdjY = Cnc.CurrentY;
             PlaceHereAdj = true;
+            SelectCamera(DownCamera);
+            SetCurrentCameraParameters();
+            CNC_Z_m(0);
         }
 
 
@@ -10390,6 +10393,9 @@ namespace LitePlacer
             double yp = Properties.Settings.Default.UpCam_PositionY;
             double yo = Properties.Settings.Default.DownCam_NeedleOffsetY;
             Needle.Move_m(xp - xo, yp - yo, Cnc.CurrentA);
+            SelectCamera(UpCamera);
+            SetCurrentCameraParameters();
+            CNC_Z_m(Properties.Settings.Default.General_ZtoPCB - 1.0); // Average small component height 1mm (?)
         }
 
         // =================================================================================
