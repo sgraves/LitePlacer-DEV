@@ -1494,6 +1494,7 @@ namespace LitePlacer
 
         private void VacuumOn()
         {
+            PlaceHereAdj = false;
             if (!VacuumIsOn)
             {
                 DisplayText("VacuumOn()");
@@ -1506,6 +1507,7 @@ namespace LitePlacer
 
         private void VacuumOff()
         {
+            PlaceHereAdj = false;
             if (VacuumIsOn)
             {
                 DisplayText("VacuumOff()");
@@ -10311,8 +10313,8 @@ namespace LitePlacer
         {
             Test1_button.Text = "Pickup this";
             Test2_button.Text = "Place here";
-            Test3_button.Text = "Probe (n.c.)";
-            Test4_button.Text = "Needle to cam";
+            Test3_button.Text = "Adjust Place Here";
+            Test4_button.Text = "Needle to up cam";
             Test5_button.Text = "Probe down";
             Test6_button.Text = "Needle up";
         }
@@ -10349,7 +10351,14 @@ namespace LitePlacer
             double Xmark = Cnc.CurrentX;
             double Ymark = Cnc.CurrentY;
             DisplayText("test 2: Place here (probing)");
-            if (!Needle.Move_m(Cnc.CurrentX, Cnc.CurrentY, Cnc.CurrentA))
+            if (PlaceHereAdj)
+            {
+                double VirtualUpCamCncX = Properties.Settings.Default.UpCam_PositionX - Properties.Settings.Default.DownCam_NeedleOffsetX;
+                double VirtualUpCamCncY = Properties.Settings.Default.UpCam_PositionY - Properties.Settings.Default.DownCam_NeedleOffsetY;
+                CNC_XY_m(Xmark + PlaceHereAdjX - VirtualUpCamCncX, Ymark + PlaceHereAdjY - VirtualUpCamCncY);
+                PlaceHereAdj = false;
+            }
+            else if (!Needle.Move_m(Cnc.CurrentX, Cnc.CurrentY, Cnc.CurrentA))
             {
                 return;
             }
@@ -10358,15 +10367,16 @@ namespace LitePlacer
             CNC_Z_m(0);  // back up
             CNC_XY_m(Xmark, Ymark);  // show results
         }
-
+        bool PlaceHereAdj = false;
+        double PlaceHereAdjX;
+        double PlaceHereAdjY;
         // =================================================================================
         // test 3
         private void Test3_button_Click(object sender, EventArgs e)
         {
-            Xmark = Cnc.CurrentX;
-            Ymark = Cnc.CurrentY;
-            CNC_XY_m((Cnc.CurrentX + Properties.Settings.Default.DownCam_NeedleOffsetX), (Cnc.CurrentY + Properties.Settings.Default.DownCam_NeedleOffsetY));
-            Needle_ProbeDown_m();
+            PlaceHereAdjX = Cnc.CurrentX;
+            PlaceHereAdjY = Cnc.CurrentY;
+            PlaceHereAdj = true;
         }
 
 
