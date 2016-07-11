@@ -663,6 +663,7 @@
             this.TapesAll_saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.TapesAll_openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.UpdateLocation_button = new System.Windows.Forms.Button();
             this.Tapes_tabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CustomTapes_dataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Tapes_dataGridView)).BeginInit();
@@ -6946,19 +6947,20 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.UpdateLocation_button);
             this.groupBox3.Controls.Add(this.PlaceOne_button);
             this.groupBox3.Controls.Add(this.ShowMachine_button);
             this.groupBox3.Controls.Add(this.ShowNominal_button);
-            this.groupBox3.Location = new System.Drawing.Point(656, 62);
+            this.groupBox3.Location = new System.Drawing.Point(656, 31);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(122, 118);
+            this.groupBox3.Size = new System.Drawing.Size(122, 149);
             this.groupBox3.TabIndex = 56;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Component Operations";
             // 
             // PlaceOne_button
             // 
-            this.PlaceOne_button.Location = new System.Drawing.Point(5, 87);
+            this.PlaceOne_button.Location = new System.Drawing.Point(6, 120);
             this.PlaceOne_button.Name = "PlaceOne_button";
             this.PlaceOne_button.Size = new System.Drawing.Size(110, 23);
             this.PlaceOne_button.TabIndex = 49;
@@ -7330,10 +7332,10 @@
             // label88
             // 
             this.label88.AutoSize = true;
-            this.label88.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label88.Location = new System.Drawing.Point(659, 13);
+            this.label88.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label88.Location = new System.Drawing.Point(657, 13);
             this.label88.Name = "label88";
-            this.label88.Size = new System.Drawing.Size(86, 20);
+            this.label88.Size = new System.Drawing.Size(58, 13);
             this.label88.TabIndex = 43;
             this.label88.Text = "CAD Data:";
             // 
@@ -7419,7 +7421,7 @@
             // Bottom_checkBox
             // 
             this.Bottom_checkBox.AutoSize = true;
-            this.Bottom_checkBox.Location = new System.Drawing.Point(663, 37);
+            this.Bottom_checkBox.Location = new System.Drawing.Point(721, 14);
             this.Bottom_checkBox.Name = "Bottom_checkBox";
             this.Bottom_checkBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.Bottom_checkBox.Size = new System.Drawing.Size(59, 17);
@@ -7707,6 +7709,17 @@
             // colorDialog1
             // 
             this.colorDialog1.SolidColorOnly = true;
+            // 
+            // UpdateLocation_button
+            // 
+            this.UpdateLocation_button.Location = new System.Drawing.Point(5, 90);
+            this.UpdateLocation_button.Name = "UpdateLocation_button";
+            this.UpdateLocation_button.Size = new System.Drawing.Size(110, 23);
+            this.UpdateLocation_button.TabIndex = 50;
+            this.UpdateLocation_button.Text = "Update location";
+            this.toolTip1.SetToolTip(this.UpdateLocation_button, "Recalculates and sets nominal location based \r\non present location and measured location");
+            this.UpdateLocation_button.UseVisualStyleBackColor = true;
+            this.UpdateLocation_button.Click += new System.EventHandler(this.UpdateLocation_button_Click);
             // 
             // FormMain
             // 
@@ -8477,6 +8490,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn X_Machine;
         private System.Windows.Forms.DataGridViewTextBoxColumn Y_machine;
         private System.Windows.Forms.DataGridViewTextBoxColumn Rotation_machine;
+        private System.Windows.Forms.Button UpdateLocation_button;
     }
 }
 
