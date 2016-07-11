@@ -236,10 +236,10 @@ namespace LitePlacer
                 _readyEvent.Set();
                 return;   // already there
             }
-            if ((!SlackCompensation)
-                ||
-                ((CurrentX < X) && (CurrentY < Y))
-                )
+//            if ((!SlackCompensation)
+//                ||
+//                ((CurrentX < X) && (CurrentY < Y))
+            if (!SlackCompensation)
             {
                 XY_move(X, Y);
             }
@@ -284,7 +284,8 @@ namespace LitePlacer
             bool CompensateXY = false;
             bool CompensateA = false;
 
-            if ((SlackCompensation) && ((CurrentX > X) || (CurrentY > Y)))
+//            if ((SlackCompensation) && ((CurrentX > X) || (CurrentY > Y)))
+            if (SlackCompensation)
             {
                 CompensateXY = true;
             }
