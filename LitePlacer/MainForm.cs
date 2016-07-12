@@ -10400,6 +10400,7 @@ namespace LitePlacer
             SelectCamera(DownCamera);
             SetCurrentCameraParameters();
             CNC_Z_m(0);
+            ZGuardOn();
         }
 
 
@@ -10416,6 +10417,7 @@ namespace LitePlacer
             SelectCamera(UpCamera);
             SetCurrentCameraParameters();
             CNC_Z_m(Properties.Settings.Default.General_ZtoPCB - 1.0); // Average small component height 1mm (?)
+            ZGuardOff();
         }
 
         // =================================================================================
