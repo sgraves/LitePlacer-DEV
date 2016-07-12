@@ -1521,8 +1521,10 @@ namespace LitePlacer
 		{
 			Pen pen = new Pen(Color.Red, 1);
 			Graphics g = Graphics.FromImage(img);
-			g.DrawLine(pen, FrameCenterX, 0, FrameCenterX, FrameSizeY);
-			g.DrawLine(pen, 0, FrameCenterY, FrameSizeX, FrameCenterY);
+            float SizeX = img.Width;
+            float SizeY = img.Height;
+            g.DrawLine(pen, SizeX/2, 0, SizeX/2, SizeY);
+			g.DrawLine(pen, 0, SizeY/2, SizeX, SizeY/2);
             pen.Dispose();
             g.Dispose();
 		}
