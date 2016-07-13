@@ -662,7 +662,11 @@
             this.TapesAll_saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.TapesAll_openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+//<<<<<<< HEAD
             this.UpdateLocation_button = new System.Windows.Forms.Button();
+//=======
+            this.RotateCross_CheckBox = new System.Windows.Forms.CheckBox();
+//>>>>>>> UpCameraAdjusting
             this.Tapes_tabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CustomTapes_dataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Tapes_dataGridView)).BeginInit();
@@ -4128,9 +4132,9 @@
             this.UpcamPositionY_textBox.Name = "UpcamPositionY_textBox";
             this.UpcamPositionY_textBox.Size = new System.Drawing.Size(46, 20);
             this.UpcamPositionY_textBox.TabIndex = 69;
+            this.toolTip1.SetToolTip(this.UpcamPositionY_textBox, "This value is set during Needle Setup.\r\nWhile allowed, editing is not advised.");
             this.UpcamPositionY_textBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.UpcamPositionY_textBox_KeyPress);
             this.UpcamPositionY_textBox.Leave += new System.EventHandler(this.UpcamPositionY_textBox_Leave);
-            this.toolTip1.SetToolTip(this.UpcamPositionY_textBox, "This value is set during Needle Setup.\r\nWhile allowed, editing is not advised.");
             // 
             // UpcamPositionX_textBox
             // 
@@ -4138,9 +4142,9 @@
             this.UpcamPositionX_textBox.Name = "UpcamPositionX_textBox";
             this.UpcamPositionX_textBox.Size = new System.Drawing.Size(46, 20);
             this.UpcamPositionX_textBox.TabIndex = 68;
+            this.toolTip1.SetToolTip(this.UpcamPositionX_textBox, "This value is set during Needle Setup.\r\nWhile allowed, editing is not advised.");
             this.UpcamPositionX_textBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.UpcamPositionX_textBox_KeyPress);
             this.UpcamPositionX_textBox.Leave += new System.EventHandler(this.UpcamPositionX_textBox_Leave);
-            this.toolTip1.SetToolTip(this.UpcamPositionX_textBox, "This value is set during Needle Setup.\r\nWhile allowed, editing is not advised.");
             // 
             // NeedleOffsetY_textBox
             // 
@@ -7699,6 +7703,7 @@
             // 
             this.colorDialog1.SolidColorOnly = true;
             // 
+//<<<<<<< HEAD
             // UpdateLocation_button
             // 
             this.UpdateLocation_button.Location = new System.Drawing.Point(5, 90);
@@ -7709,6 +7714,19 @@
             this.toolTip1.SetToolTip(this.UpdateLocation_button, "Recalculates and sets nominal location based \r\non present location and measured location");
             this.UpdateLocation_button.UseVisualStyleBackColor = true;
             this.UpdateLocation_button.Click += new System.EventHandler(this.UpdateLocation_button_Click);
+//=======
+            // RotateCross_CheckBox
+            // 
+            this.RotateCross_CheckBox.AutoSize = true;
+            this.RotateCross_CheckBox.Location = new System.Drawing.Point(946, 727);
+            this.RotateCross_CheckBox.Name = "RotateCross_CheckBox";
+            this.RotateCross_CheckBox.Size = new System.Drawing.Size(87, 17);
+            this.RotateCross_CheckBox.TabIndex = 92;
+            this.RotateCross_CheckBox.Text = "Rotate Cross";
+            this.toolTip1.SetToolTip(this.RotateCross_CheckBox, "When checked jogging rotates the cross and not the A axis");
+            this.RotateCross_CheckBox.UseVisualStyleBackColor = true;
+            this.RotateCross_CheckBox.Click += new System.EventHandler(this.RotateCross_checkBox_Click);
+//>>>>>>> UpCameraAdjusting
             // 
             // FormMain
             // 
@@ -7716,6 +7734,7 @@
             this.AutoScroll = true;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(1258, 856);
+            this.Controls.Add(this.RotateCross_CheckBox);
             this.Controls.Add(this.tabControlPages);
             this.Controls.Add(this.label138);
             this.Controls.Add(this.label139);
@@ -8478,7 +8497,11 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn X_Machine;
         private System.Windows.Forms.DataGridViewTextBoxColumn Y_machine;
         private System.Windows.Forms.DataGridViewTextBoxColumn Rotation_machine;
+//<<<<<<< HEAD
         private System.Windows.Forms.Button UpdateLocation_button;
+//=======
+        private System.Windows.Forms.CheckBox RotateCross_CheckBox;
+//>>>>>>> UpCameraAdjusting
     }
 }
 
