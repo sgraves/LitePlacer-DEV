@@ -1271,13 +1271,20 @@ namespace LitePlacer
                 {
                     Mag = 90.0;
                 }
-                CNC_A_m(Cnc.CurrentA + Mag);
-                if (DownCamera.Draw_Snapshot)
+                if (DownCamera.RotateCrossOn)
                 {
-                    DownCamera.RotateSnapshot(Cnc.CurrentA);
-                    while (DownCamera.rotating)
+                    DownCamera.RotateCrossAng += Mag;
+                }
+                else
+                {
+                    CNC_A_m(Cnc.CurrentA + Mag);
+                    if (DownCamera.Draw_Snapshot)
                     {
-                        Thread.Sleep(10);
+                        DownCamera.RotateSnapshot(Cnc.CurrentA);
+                        while (DownCamera.rotating)
+                        {
+                            Thread.Sleep(10);
+                        }
                     }
                 }
                 e.IsInputKey = true;
@@ -1293,13 +1300,20 @@ namespace LitePlacer
                 {
                     Mag = 90.0;
                 }
-                CNC_A_m(Cnc.CurrentA - Mag);
-                if (DownCamera.Draw_Snapshot)
+                if (DownCamera.RotateCrossOn)
                 {
-                    DownCamera.RotateSnapshot(Cnc.CurrentA);
-                    while (DownCamera.rotating)
+                    DownCamera.RotateCrossAng -= Mag;
+                }
+                else
+                {
+                    CNC_A_m(Cnc.CurrentA - Mag);
+                    if (DownCamera.Draw_Snapshot)
                     {
-                        Thread.Sleep(10);
+                        DownCamera.RotateSnapshot(Cnc.CurrentA);
+                        while (DownCamera.rotating)
+                        {
+                            Thread.Sleep(10);
+                        }
                     }
                 }
                 e.IsInputKey = true;
@@ -3384,6 +3398,23 @@ namespace LitePlacer
             if (double.TryParse(NeedleOffsetY_textBox.Text, out val))
             {
                 Properties.Settings.Default.DownCam_NeedleOffsetY = val;
+            }
+        }
+
+        // ====
+        private void RotateCross_checkBox_Click(object sender, EventArgs e)
+        {
+            if (RotateCross_CheckBox.Checked)
+            {
+                UpCamera.RotateCrossOn = true;
+                UpCamera.RotateCrossAng = 0;
+                DownCamera.RotateCrossOn = true;
+                DownCamera.RotateCrossAng = 0;
+            }
+            else
+            {
+                UpCamera.RotateCrossOn = false;
+                DownCamera.RotateCrossOn = false;
             }
         }
 

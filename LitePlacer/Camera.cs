@@ -99,9 +99,14 @@ namespace LitePlacer
 		public int FrameCenterX { get; set; }
 		public int FrameCenterY { get; set; }
 		public int FrameSizeX { get; set; }
-		public int FrameSizeY { get; set; }
+        public int FrameSizeY { get; set; }
 
-		public string MonikerString = "unconnected";
+        //There are times when one needs to rotate the cross to find the alignment of
+        //a part.  This controls that
+        public bool RotateCrossOn { get; set; }
+        public double RotateCrossAng { get; set; }
+
+        public string MonikerString = "unconnected";
         public string Id = "unconnected";
 
         public bool ReceivingFrames { get; set; }
@@ -1516,6 +1521,13 @@ namespace LitePlacer
             g.Dispose();
 		}
 		// =========================================================
+        // There are times when one wants to determine the angle of
+        // a part.  The algorithm for rotating the cross needs to
+        // handle any angle. Since we have two lines at right angles
+        // we can use Math.Abs to force everything into the first
+        // quadrant.  We can calculate one side and see if it exceeds
+        // the side of the box.  If it does we set it to the limit
+        // in that direction and calculate the other side.
 
 		private void DrawCrossFunct(ref Bitmap img)
 		{
@@ -1523,8 +1535,36 @@ namespace LitePlacer
 			Graphics g = Graphics.FromImage(img);
             float SizeX = img.Width;
             float SizeY = img.Height;
-            g.DrawLine(pen, SizeX/2, 0, SizeX/2, SizeY);
-			g.DrawLine(pen, 0, SizeY/2, SizeX, SizeY/2);
+            float CosFactor = 1;
+            float SinFactor = 0;
+            if(RotateCrossOn)
+            {
+                CosFactor = (float)Math.Abs(Math.Cos(RotateCrossAng * Math.PI/180));
+                SinFactor = (float)Math.Abs(Math.Sin(RotateCrossAng * Math.PI/180));
+            }
+            float HorzX = SizeX / 2;
+            float HorzY = 0;
+            float VertX = 0;
+            float VertY = SizeY / 2;
+            if(CosFactor != 0 && SinFactor != 0)
+            {
+
+                HorzY = SinFactor * HorzX / CosFactor;
+                if(HorzY > VertX)
+                {
+                    HorzY = VertX;
+                    HorzX = CosFactor * HorzY / SinFactor;
+                }
+                VertX = SinFactor * VertY / SinFactor;
+                if(VertX > SizeX/2)
+                {
+                    VertX = SizeX / 2;
+                    VertY = CosFactor * VertX / SinFactor;
+                }
+
+            }
+            g.DrawLine(pen, SizeX / 2 - HorzX, SizeY / 2 - HorzY, SizeX / 2 + HorzX, SizeY / 2 + HorzY);
+            g.DrawLine(pen, SizeX / 2 - VertX, SizeY / 2 - VertY, SizeX / 2 + VertX, SizeY / 2 + VertY);
             pen.Dispose();
             g.Dispose();
 		}
