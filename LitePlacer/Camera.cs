@@ -1564,8 +1564,8 @@ namespace LitePlacer
             float SinFactor = 0;
             if(RotateCrossOn)
             {
-                CosFactor = (float)Math.Abs(Math.Cos(RotateCrossAng * Math.PI/180));
-                SinFactor = (float)Math.Abs(Math.Sin(RotateCrossAng * Math.PI/180));
+                CosFactor = (float)Math.Cos(RotateCrossAng * Math.PI/180);
+                SinFactor = (float)Math.Sin(RotateCrossAng * Math.PI/180);
             }
             float HorzX = SizeX / 2;
             float HorzY = 0;
@@ -1575,15 +1575,15 @@ namespace LitePlacer
             {
 
                 HorzY = SinFactor * HorzX / CosFactor;
-                if(HorzY > VertX)
+                if(Math.Abs(HorzY) > VertY)
                 {
-                    HorzY = VertX;
+                    HorzY = Math.Sign(HorzY)*VertY;
                     HorzX = CosFactor * HorzY / SinFactor;
                 }
                 VertX = SinFactor * VertY / CosFactor;
                 if(VertX > SizeX/2)
                 {
-                    VertX = SizeX / 2;
+                    VertX = Math.Sign(VertX) * SizeX / 2;
                     VertY = CosFactor * VertX / SinFactor;
                 }
 
