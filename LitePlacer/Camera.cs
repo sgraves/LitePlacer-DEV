@@ -1580,7 +1580,7 @@ namespace LitePlacer
                     HorzY = VertX;
                     HorzX = CosFactor * HorzY / SinFactor;
                 }
-                VertX = SinFactor * VertY / SinFactor;
+                VertX = SinFactor * VertY / CosFactor;
                 if(VertX > SizeX/2)
                 {
                     VertX = SizeX / 2;
