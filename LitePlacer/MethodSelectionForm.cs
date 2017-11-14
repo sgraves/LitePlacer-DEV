@@ -81,7 +81,7 @@ namespace LitePlacer
 
 		private void ManualUpCam_button_Click(object sender, EventArgs e)
 		{
-            SelectedMethod = "UpCam Snapshot";
+            SelectedMethod = "Place Manual UpCam";
             this.Close();
 		}
 

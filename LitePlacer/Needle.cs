@@ -203,7 +203,7 @@ namespace LitePlacer
 			double X = 0;
 			double Y = 0;
             double Dist;
-			int res = 0; ;
+			int res = 0;
             // We don't want slack compensation on save the present state to restore
             bool SaveSlackCompState = Cnc.SlackCompensation;
             bool SaveSlackCompAState = Cnc.SlackCompensationA;

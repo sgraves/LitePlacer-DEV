@@ -30,8 +30,8 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             this.Park_button = new System.Windows.Forms.Button();
             this.TestNeedleRecognition_button = new System.Windows.Forms.Button();
             this.DownCamZoomFactor_textBox = new System.Windows.Forms.TextBox();
@@ -117,7 +117,7 @@
             this.PlaceZ_Column = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.NextX_Column = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.NextY_column = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Tapes_pictureBox = new Camera.ProtectedPictureBox();
+            this.Tapes_pictureBox = new LitePlacer.Camera.ProtectedPictureBox();
             this.Components_tabPage = new System.Windows.Forms.TabPage();
             this.ComponentData_dataGridView = new System.Windows.Forms.DataGridView();
             this.PartialName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -364,7 +364,7 @@
             this.label93 = new System.Windows.Forms.Label();
             this.label94 = new System.Windows.Forms.Label();
             this.ImageTest_checkBox = new System.Windows.Forms.CheckBox();
-            this.Cam_pictureBox = new Camera.ProtectedPictureBox();
+            this.Cam_pictureBox = new LitePlacer.Camera.ProtectedPictureBox();
             this.tabPageBasicSetup = new System.Windows.Forms.TabPage();
             this.NeedleBelowPCB_textBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -556,7 +556,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.comboBoxSerialPorts = new System.Windows.Forms.ComboBox();
             this.RunJob_tabPage = new System.Windows.Forms.TabPage();
-            this.Placement_pictureBox = new Camera.ProtectedPictureBox();
+            this.Placement_pictureBox = new LitePlacer.Camera.ProtectedPictureBox();
             this.SkipMeasurements_checkBox = new System.Windows.Forms.CheckBox();
             this.OmitNeedleCalibration_checkBox = new System.Windows.Forms.CheckBox();
             this.MeasureZs_checkBox = new System.Windows.Forms.CheckBox();
@@ -588,6 +588,7 @@
             this.JobDataLoad_button = new System.Windows.Forms.Button();
             this.LoadCadData_button = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.UpdateLocation_button = new System.Windows.Forms.Button();
             this.PlaceOne_button = new System.Windows.Forms.Button();
             this.ShowMachine_button = new System.Windows.Forms.Button();
             this.ShowNominal_button = new System.Windows.Forms.Button();
@@ -658,15 +659,12 @@
             this.Goto_button = new System.Windows.Forms.Button();
             this.label138 = new System.Windows.Forms.Label();
             this.label139 = new System.Windows.Forms.Label();
+            this.RotateCross_CheckBox = new System.Windows.Forms.CheckBox();
             this.TrueX_label = new System.Windows.Forms.Label();
             this.TapesAll_saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.TapesAll_openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-//<<<<<<< HEAD
-            this.UpdateLocation_button = new System.Windows.Forms.Button();
-//=======
-            this.RotateCross_CheckBox = new System.Windows.Forms.CheckBox();
-//>>>>>>> UpCameraAdjusting
+            this.VerifyNeedle_button = new System.Windows.Forms.Button();
             this.Tapes_tabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CustomTapes_dataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Tapes_dataGridView)).BeginInit();
@@ -742,9 +740,9 @@
             // 
             // TestNeedleRecognition_button
             // 
-            this.TestNeedleRecognition_button.Location = new System.Drawing.Point(352, 571);
+            this.TestNeedleRecognition_button.Location = new System.Drawing.Point(352, 563);
             this.TestNeedleRecognition_button.Name = "TestNeedleRecognition_button";
-            this.TestNeedleRecognition_button.Size = new System.Drawing.Size(110, 23);
+            this.TestNeedleRecognition_button.Size = new System.Drawing.Size(110, 20);
             this.TestNeedleRecognition_button.TabIndex = 63;
             this.TestNeedleRecognition_button.Text = "Measure Needle";
             this.toolTip1.SetToolTip(this.TestNeedleRecognition_button, "Re-runs needle calibration routine.");
@@ -6552,6 +6550,7 @@
             // 
             // RunJob_tabPage
             // 
+            this.RunJob_tabPage.Controls.Add(this.VerifyNeedle_button);
             this.RunJob_tabPage.Controls.Add(this.Placement_pictureBox);
             this.RunJob_tabPage.Controls.Add(this.SkipMeasurements_checkBox);
             this.RunJob_tabPage.Controls.Add(this.OmitNeedleCalibration_checkBox);
@@ -6772,9 +6771,9 @@
             // 
             // ChangeNeedle_button
             // 
-            this.ChangeNeedle_button.Location = new System.Drawing.Point(352, 596);
+            this.ChangeNeedle_button.Location = new System.Drawing.Point(352, 585);
             this.ChangeNeedle_button.Name = "ChangeNeedle_button";
-            this.ChangeNeedle_button.Size = new System.Drawing.Size(110, 23);
+            this.ChangeNeedle_button.Size = new System.Drawing.Size(110, 20);
             this.ChangeNeedle_button.TabIndex = 72;
             this.ChangeNeedle_button.Text = "Change Needle";
             this.ChangeNeedle_button.UseVisualStyleBackColor = true;
@@ -6822,9 +6821,9 @@
             // 
             // ReMeasure_button
             // 
-            this.ReMeasure_button.Location = new System.Drawing.Point(352, 546);
+            this.ReMeasure_button.Location = new System.Drawing.Point(352, 541);
             this.ReMeasure_button.Name = "ReMeasure_button";
-            this.ReMeasure_button.Size = new System.Drawing.Size(110, 23);
+            this.ReMeasure_button.Size = new System.Drawing.Size(110, 20);
             this.ReMeasure_button.TabIndex = 48;
             this.ReMeasure_button.Text = "Re-measure";
             this.toolTip1.SetToolTip(this.ReMeasure_button, "Re-measures PCB, convertign CAD data coordinates to \r\nmachine coordinates, based " +
@@ -6950,6 +6949,18 @@
             this.groupBox3.TabIndex = 56;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Component Operations";
+            // 
+            // UpdateLocation_button
+            // 
+            this.UpdateLocation_button.Location = new System.Drawing.Point(5, 90);
+            this.UpdateLocation_button.Name = "UpdateLocation_button";
+            this.UpdateLocation_button.Size = new System.Drawing.Size(110, 23);
+            this.UpdateLocation_button.TabIndex = 50;
+            this.UpdateLocation_button.Text = "Update location";
+            this.toolTip1.SetToolTip(this.UpdateLocation_button, "Recalculates and sets nominal location based \r\non present location and measured l" +
+        "ocation");
+            this.UpdateLocation_button.UseVisualStyleBackColor = true;
+            this.UpdateLocation_button.Click += new System.EventHandler(this.UpdateLocation_button_Click);
             // 
             // PlaceOne_button
             // 
@@ -7355,14 +7366,14 @@
             this.JobData_GridView.AllowUserToAddRows = false;
             this.JobData_GridView.AllowUserToResizeRows = false;
             this.JobData_GridView.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.JobData_GridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.JobData_GridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.JobData_GridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.JobData_GridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ComponentCount,
@@ -7429,14 +7440,14 @@
             this.CadData_GridView.AllowUserToResizeRows = false;
             this.CadData_GridView.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.Raised;
             this.CadData_GridView.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.CadData_GridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.CadData_GridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.CadData_GridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.CadData_GridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Component,
@@ -7678,6 +7689,18 @@
             this.label139.Text = "Z:";
             this.toolTip1.SetToolTip(this.label139, resources.GetString("label139.ToolTip"));
             // 
+            // RotateCross_CheckBox
+            // 
+            this.RotateCross_CheckBox.AutoSize = true;
+            this.RotateCross_CheckBox.Location = new System.Drawing.Point(946, 727);
+            this.RotateCross_CheckBox.Name = "RotateCross_CheckBox";
+            this.RotateCross_CheckBox.Size = new System.Drawing.Size(87, 17);
+            this.RotateCross_CheckBox.TabIndex = 92;
+            this.RotateCross_CheckBox.Text = "Rotate Cross";
+            this.toolTip1.SetToolTip(this.RotateCross_CheckBox, "When checked jogging rotates the cross and not the A axis");
+            this.RotateCross_CheckBox.UseVisualStyleBackColor = true;
+            this.RotateCross_CheckBox.Click += new System.EventHandler(this.RotateCross_checkBox_Click);
+            // 
             // TrueX_label
             // 
             this.TrueX_label.AutoSize = true;
@@ -7703,30 +7726,16 @@
             // 
             this.colorDialog1.SolidColorOnly = true;
             // 
-//<<<<<<< HEAD
-            // UpdateLocation_button
+            // VerifyNeedle_button
             // 
-            this.UpdateLocation_button.Location = new System.Drawing.Point(5, 90);
-            this.UpdateLocation_button.Name = "UpdateLocation_button";
-            this.UpdateLocation_button.Size = new System.Drawing.Size(110, 23);
-            this.UpdateLocation_button.TabIndex = 50;
-            this.UpdateLocation_button.Text = "Update location";
-            this.toolTip1.SetToolTip(this.UpdateLocation_button, "Recalculates and sets nominal location based \r\non present location and measured location");
-            this.UpdateLocation_button.UseVisualStyleBackColor = true;
-            this.UpdateLocation_button.Click += new System.EventHandler(this.UpdateLocation_button_Click);
-//=======
-            // RotateCross_CheckBox
-            // 
-            this.RotateCross_CheckBox.AutoSize = true;
-            this.RotateCross_CheckBox.Location = new System.Drawing.Point(946, 727);
-            this.RotateCross_CheckBox.Name = "RotateCross_CheckBox";
-            this.RotateCross_CheckBox.Size = new System.Drawing.Size(87, 17);
-            this.RotateCross_CheckBox.TabIndex = 92;
-            this.RotateCross_CheckBox.Text = "Rotate Cross";
-            this.toolTip1.SetToolTip(this.RotateCross_CheckBox, "When checked jogging rotates the cross and not the A axis");
-            this.RotateCross_CheckBox.UseVisualStyleBackColor = true;
-            this.RotateCross_CheckBox.Click += new System.EventHandler(this.RotateCross_checkBox_Click);
-//>>>>>>> UpCameraAdjusting
+            this.VerifyNeedle_button.Location = new System.Drawing.Point(352, 608);
+            this.VerifyNeedle_button.Name = "VerifyNeedle_button";
+            this.VerifyNeedle_button.Size = new System.Drawing.Size(110, 20);
+            this.VerifyNeedle_button.TabIndex = 82;
+            this.VerifyNeedle_button.Text = "Verify Needle";
+            this.VerifyNeedle_button.UseVisualStyleBackColor = true;
+            this.VerifyNeedle_button.Click += new System.EventHandler(this.VerifyNeedle_button_Click);
+            this.toolTip1.SetToolTip(this.VerifyNeedle_button, "When a placement fails to locate properly, \r\nthis allows one to verify that needle correction is not the problem");
             // 
             // FormMain
             // 
@@ -8501,7 +8510,8 @@
         private System.Windows.Forms.Button UpdateLocation_button;
 //=======
         private System.Windows.Forms.CheckBox RotateCross_CheckBox;
-//>>>>>>> UpCameraAdjusting
+        private System.Windows.Forms.Button VerifyNeedle_button;
+        //>>>>>>> UpCameraAdjusting
     }
 }
 

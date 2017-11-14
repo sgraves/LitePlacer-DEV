@@ -1588,7 +1588,7 @@ namespace LitePlacer
                 }
 
             }
-            g.DrawLine(pen, SizeX / 2 - HorzX, SizeY / 2 - HorzY, SizeX / 2 + HorzX, SizeY / 2 + HorzY);
+            g.DrawLine(pen, SizeX / 2 + HorzX, SizeY / 2 - HorzY, SizeX / 2 - HorzX, SizeY / 2 + HorzY);
             g.DrawLine(pen, SizeX / 2 - VertX, SizeY / 2 - VertY, SizeX / 2 + VertX, SizeY / 2 + VertY);
             pen.Dispose();
             g.Dispose();

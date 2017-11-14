@@ -189,7 +189,7 @@
             // UpdateJobGrid_checkBox
             // 
             this.UpdateJobGrid_checkBox.AutoSize = true;
-            this.UpdateJobGrid_checkBox.Location = new System.Drawing.Point(250, 297);
+            this.UpdateJobGrid_checkBox.Location = new System.Drawing.Point(250, 302);
             this.UpdateJobGrid_checkBox.Name = "UpdateJobGrid_checkBox";
             this.UpdateJobGrid_checkBox.Size = new System.Drawing.Size(107, 17);
             this.UpdateJobGrid_checkBox.TabIndex = 14;
@@ -199,24 +199,22 @@
             // 
             // ManualUpCam_button
             // 
-            this.ManualUpCam_button.Location = new System.Drawing.Point(7, 272);
+            this.ManualUpCam_button.Location = new System.Drawing.Point(238, 273);
             this.ManualUpCam_button.Name = "ManualUpCam_button";
             this.ManualUpCam_button.Size = new System.Drawing.Size(119, 23);
             this.ManualUpCam_button.TabIndex = 15;
             this.ManualUpCam_button.Text = "Place with UpCam";
             this.ManualUpCam_button.UseVisualStyleBackColor = true;
-            this.ManualUpCam_button.Visible = false;
             this.ManualUpCam_button.Click += new System.EventHandler(this.ManualUpCam_button_Click);
             // 
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(4, 311);
+            this.label8.Location = new System.Drawing.Point(12, 278);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(214, 13);
+            this.label8.Size = new System.Drawing.Size(221, 13);
             this.label8.TabIndex = 16;
-            this.label8.Text = "Manually assisted, with up camera snapshot";
-            this.label8.Visible = false;
+            this.label8.Text = "Manually assisted, with up camera positioning";
             // 
             // LoosePart_button
             // 
@@ -259,7 +257,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(4, 298);
+            this.label11.Location = new System.Drawing.Point(4, 306);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(228, 13);
             this.label11.TabIndex = 22;
@@ -268,7 +266,7 @@
             // 
             // ManualDownCam_button
             // 
-            this.ManualDownCam_button.Location = new System.Drawing.Point(132, 272);
+            this.ManualDownCam_button.Location = new System.Drawing.Point(7, 215);
             this.ManualDownCam_button.Name = "ManualDownCam_button";
             this.ManualDownCam_button.Size = new System.Drawing.Size(119, 23);
             this.ManualDownCam_button.TabIndex = 21;

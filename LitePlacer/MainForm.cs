@@ -98,6 +98,7 @@ namespace LitePlacer
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            AffineTransform.MainForm = this;
             StartingUp = true;
             this.Size = new Size(1280, 900);
             DisplayText("Application Start");
@@ -957,6 +958,11 @@ namespace LitePlacer
             Grid.Refresh();
         }
 
+        private double CalcDist(double XComp, double YComp)
+        {
+            return Math.Sqrt(Math.Pow(XComp, 2) + Math.Pow(YComp, 2));
+        }
+
         #endregion General
 
         // =================================================================================
@@ -1271,8 +1277,9 @@ namespace LitePlacer
                 {
                     Mag = 90.0;
                 }
-                if (DownCamera.RotateCrossOn)
+                if (RotateCross_CheckBox.Checked)
                 {
+                    DownCamera.RotateCrossOn = true;
                     DownCamera.RotateCrossAng += Mag;
                 }
                 else
@@ -1300,8 +1307,9 @@ namespace LitePlacer
                 {
                     Mag = 90.0;
                 }
-                if (DownCamera.RotateCrossOn)
+                if (RotateCross_CheckBox.Checked)
                 {
+                    DownCamera.RotateCrossOn = true;
                     DownCamera.RotateCrossAng -= Mag;
                 }
                 else
@@ -2208,6 +2216,8 @@ namespace LitePlacer
                     if (tries >= 7)
                     {
                         DisplayText("Failed in 8 tries.");
+                        DownCamera.PauseProcessing = false;
+                        Thread.Sleep(80); // Time to acquire processed image
                         ShowMessageBox(
                             "Optical positioning: Can't find Circle",
                             "No Circle found",
@@ -3404,18 +3414,18 @@ namespace LitePlacer
         // ====
         private void RotateCross_checkBox_Click(object sender, EventArgs e)
         {
-            if (RotateCross_CheckBox.Checked)
-            {
-                UpCamera.RotateCrossOn = true;
-                UpCamera.RotateCrossAng = 0;
-                DownCamera.RotateCrossOn = true;
-                DownCamera.RotateCrossAng = 0;
-            }
-            else
-            {
-                UpCamera.RotateCrossOn = false;
-                DownCamera.RotateCrossOn = false;
-            }
+            //if (RotateCross_CheckBox.Checked)
+            //{
+            //    UpCamera.RotateCrossOn = true;
+            //    UpCamera.RotateCrossAng = 0;
+            //    DownCamera.RotateCrossOn = true;
+            //    DownCamera.RotateCrossAng = 0;
+            //}
+            //else
+            //{
+            //    UpCamera.RotateCrossOn = false;
+            //    DownCamera.RotateCrossOn = false;
+            //}
         }
 
 
@@ -3545,7 +3555,7 @@ namespace LitePlacer
                         {
                             X *= Properties.Settings.Default.UpCam_XmmPerPixel;
                             Y *= Properties.Settings.Default.UpCam_YmmPerPixel;
-                            Dist = Math.Sqrt(Math.Pow(X, 2) + Math.Pow(Y, 2));
+                            Dist = CalcDist(X, Y);
                             if (Dist < 0.01) break;
                             //Not close enough yet, move closer
                             CNC_XY_m(Cnc.CurrentX + X, Cnc.CurrentY + Y);
@@ -7002,7 +7012,7 @@ namespace LitePlacer
                         RestoreRow = false;
                     };
                     NewMethod = MethodDialog.SelectedMethod;
-                    if ((NewMethod == "Place") || (NewMethod == "Place Fast"))
+                    if ((NewMethod == "Place") || (NewMethod == "Place Fast") || (NewMethod == "Place Manual UpCam") )
                     {
                         // show the tape selection dialog
                         NewID = SelectTape("Select tape for " + JobData_GridView.Rows[RowNo].Cells["ComponentType"].Value.ToString());
@@ -7079,6 +7089,52 @@ namespace LitePlacer
                 Tapes.FastParametersOk = true;
             }
             // Place parts:
+            if(FirstInRow && JobData_GridView.Rows[RowNo].Cells["GroupMethod"].Value.ToString() == "Place Manual UpCam")
+            {
+                double X;
+                double Y;
+                double A;
+
+                if (!PrepareSingleComponentOperation(out X, out Y))
+                {
+                    ShowMessageBox(
+                        "Unable to get Component position from table",
+                        "Sloppy programmer error",
+                        MessageBoxButtons.OK);
+                    return false;
+                }
+                CNC_XY_m(X, Y);
+                if (!double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["Rotation_machine"].Value.ToString(), out A))
+                {
+                    ShowMessageBox(
+                        "Bad data at Rotation_machine",
+                        "Sloppy programmer error",
+                        MessageBoxButtons.OK);
+                    return false;
+                }
+                DownCamera.ArrowAngle = A;
+                DownCamera.DrawArrow = true;
+                DownCamera.RotateCrossAng = A;
+                DownCamera.RotateCrossOn = true;
+                RotateCross_CheckBox.Checked = true;
+                // Wait for enter key press. Before enter, either adjusts part location or just hits enter
+                EnterKeyHit = false;
+                do
+                {
+                    Application.DoEvents();
+                    Thread.Sleep(10);
+                    if (AbortPlacement)
+                    {
+                        AbortPlacement = false;
+                        ShowMessageBox(
+                            "Operation aborted.",
+                            "Operation aborted.",
+                            MessageBoxButtons.OK);
+                        return false;
+                    }
+                } while (!EnterKeyHit);
+                RotateCross_CheckBox.Checked = false;
+            }
             foreach (string Component in Components)
             {
                 if (!PlaceComponent_m(Component, RowNo, FirstInRow))
@@ -7332,7 +7388,7 @@ namespace LitePlacer
 
             // Data is now validated, all variables have values that check out. Place the component.
             // Update "Now placing" labels:
-            if ((Method == "LoosePart") || (Method == "Place") || (Method == "Place Fast"))
+            if ((Method == "LoosePart") || (Method == "Place") || (Method == "Place Fast") || (Method == "Place Manual UpCam"))
             {
                 PlacedComponent_label.Text = Component;
                 PlacedComponent_label.Update();
@@ -7379,7 +7435,8 @@ namespace LitePlacer
                         "Pause",
                         MessageBoxButtons.OK);
                     return true;
-
+                    
+                case "Place Manual UpCam":
                 case "DownCam Snapshot":
                 case "UpCam Snapshot":
                 case "LoosePart":
@@ -7714,8 +7771,10 @@ namespace LitePlacer
                     return false;
                 };
                 DisplayText("PlacePart_m(): Part down, Z" + Z.ToString(), KnownColor.Blue);
+                Needle.ProbingMode(true, JSON);
                 if (!CNC_Z_m(Z))
                 {
+                    Needle.ProbingMode(false, JSON);
                     return false;
                 }
             }
@@ -7727,8 +7786,10 @@ namespace LitePlacer
             VacuumOff();
             if (!CNC_Z_m(0))  // back up
             {
+                Needle.ProbingMode(false, JSON);
                 return false;
             }
+            Needle.ProbingMode(false, JSON);
             //ShowMessageBox(
             //    "Debug: Needle up.",
             //    "Debug",
@@ -7957,6 +8018,7 @@ namespace LitePlacer
             // Preparing:
             switch (Method)
             {
+                case "Place Manual UpCam":
                 case "Place":
                 case "Place Fast":
                     if (!Tapes.IdValidates_m(id, out TapeNum))
@@ -7981,6 +8043,7 @@ namespace LitePlacer
             // Pickup:
             switch (Method)
             {
+                case "Place Manual UpCam":
                 case "Place":
                     if (!PickUpPartWithHoleMeasurement_m(TapeNum))
                     {
@@ -8075,27 +8138,71 @@ namespace LitePlacer
                 A = Cnc.CurrentA;
             };
 
-            // Take the part to position:
-            DisplayText("PlacePart_m: goto placement position");
-            if (!Needle.Move_m(X, Y, A))
+            if (Method == "Place Manual UpCam")
             {
-                // VacuumOff();  if the above failed CNC seems to be down; low chances that VacuumOff() would go thru either. 
-                DownCamera.Draw_Snapshot = false;
-                UpCamera.Draw_Snapshot = false;
-                return false;
+                double VirtualUpCamCncX = Properties.Settings.Default.UpCam_PositionX - Properties.Settings.Default.DownCam_NeedleOffsetX;
+                double VirtualUpCamCncY = Properties.Settings.Default.UpCam_PositionY - Properties.Settings.Default.DownCam_NeedleOffsetY;
+//                if (!CNC_XYA_m(Properties.Settings.Default.UpCam_PositionX, Properties.Settings.Default.UpCam_PositionY, A))
+                if (!Needle.Move_m(VirtualUpCamCncX, VirtualUpCamCncY, A))
+                {
+                    return false;
+                };
+                SelectCamera(UpCamera);
+                SetCurrentCameraParameters();
+                UpCamera.RotateCrossOn = true;
+                UpCamera.RotateCrossAng = A;
+                if (!CNC_Z_m(Properties.Settings.Default.General_ZtoPCB - 1.0))
+                {
+                    return false;
+                };
+                ZGuardOff();
+                // Wait for enter key press. Before enter, user jogs the part and the image to right place
+                EnterKeyHit = false;
+                label122.Focus();
+                do
+                {
+                    Application.DoEvents();
+                    Thread.Sleep(10);
+                    if (AbortPlacement)
+                    {
+                        AbortPlacement = false;
+                        ShowMessageBox(
+                            "Operation aborted.",
+                            "Operation aborted.",
+                            MessageBoxButtons.OK);
+                        return false;
+                    }
+                } while (!EnterKeyHit);
+                SelectCamera(DownCamera);
+                SetCurrentCameraParameters();
+                CNC_Z_m(0);
+                ZGuardOn();
+                CNC_XY_m(X + Cnc.CurrentX - VirtualUpCamCncX, Y + Cnc.CurrentY - VirtualUpCamCncY);
             }
-
-            // Place it:
-            if (AbortPlacement)
+            else
             {
-                AbortPlacement = false;
-                ShowMessageBox(
-                    "Operation aborted.",
-                    "Operation aborted.",
-                MessageBoxButtons.OK);
-                DownCamera.Draw_Snapshot = false;
-                UpCamera.Draw_Snapshot = false;
-                return false;
+                // Take the part to position:
+                DisplayText("PlacePart_m: goto placement position");
+                if (!Needle.Move_m(X, Y, A))
+                {
+                    // VacuumOff();  if the above failed CNC seems to be down; low chances that VacuumOff() would go thru either. 
+                    DownCamera.Draw_Snapshot = false;
+                    UpCamera.Draw_Snapshot = false;
+                    return false;
+                }
+
+                // Place it:
+                if (AbortPlacement)
+                {
+                    AbortPlacement = false;
+                    ShowMessageBox(
+                        "Operation aborted.",
+                        "Operation aborted.",
+                    MessageBoxButtons.OK);
+                    DownCamera.Draw_Snapshot = false;
+                    UpCamera.Draw_Snapshot = false;
+                    return false;
+                }
             }
 
             switch (Method)
@@ -8389,6 +8496,378 @@ namespace LitePlacer
 
 
         // =================================================================================
+        // AffineMappingBoard2Machine_m
+        //
+        // Putting this into a separate function to isolate functionality and to put a
+        // discussion here.  This also allows other approaches to be plugged in here if there
+        // is a better idea.
+        //
+        // I have googled for an existing solution, but there are none that also use a shear
+        // transformation.  I think that machines with less than perfect squareness are very
+        // likely, so shear detection and correction are necesssary.  Affine transformations
+        // keep straight lines straight.  The first assumption is that the machine is linear
+        // and that the board straight lines will map to machine straight lines.  Another
+        // assumption is that there will be small errors in the measurement of the fiducials.
+        // We will spread the error out by working from the median point in both data sets.
+        //
+        // The translation transformation is simple, the difference between the two median 
+        // points. But we are going to complicate that a little. We will be translating
+        // the board (nominal) median point to the origin and the measured median point to
+        // the origin to do further processing.  We will be analyzing and transforming each
+        // set of data moving the two closer until they match.  We will create a transformation
+        // that does all these operations.  The ones that move the nominal toward the the
+        // measured are done in the order that they were done in analysis.  Then the transforms
+        // that were applied to the measured data are done in reverse. So the translation order
+        // will be that the nominal data will be translated by the nominal median.  Some other
+        // transformations happen and then the result is translated by the measured median.
+        //
+        // After translating the nominal and the measured medians to the origin, we now have to
+        // detect shear, scale and rotation.  Shear would result in the angles between the legs
+        // connecting the medians to the fiducials differing.  Differences in X and Y scale
+        // would also have the same effect.  I believe that it is unlikely that the X and Y scales
+        // differ.  The machine is designed with the same belt and steppers in the X and Y directions. 
+        // If the steps/mm are configured the same, the scale factors will be the same.  This assumption
+        // simplifies the problem. We should be able to find  the shear factor that makes the angles 
+        // equal.  Then we determine the rotation that lines them up.  Finally, we determine the scale 
+        // factor that brings them close together.
+        //
+        // I am trying to visualize an arbitrary set of fiducials and not my rectangular set.  
+        // I think that finding the difference in the angles in the nominal and measured legs would 
+        // give us the needed information.  We are going to compensate for shear with the same factor
+        // as the squareness factor.  That is shear parallel to the x axis.  Like so many things the
+        // correction could be calculated many ways.  We get the largest effect due to shear at the 
+        // maximum Y locations. We will measure the difference at the maximums and average them.
+        // The average difference should be due to rotation and the variation from average due to shear. 
+        // I have a formula to calculate/estimate the shear, but I think I should use an iterative 
+        // solution to verify and to make it more precise.  The formula is the tan of the angle due to
+        // shear divided by the Y extents.  This should give a close approximation.  A few iterations 
+        // should make it closer if the formula is off.  Then there should be no variation in the angles
+        // and the magnitude will be the required rotation angle.  Finally, the scale is set using the 
+        // extents.
+        //
+        // Then we will verify by applying the transform to the nominal fiducial values and comparing
+        // them to the measured values.  If all is good, then the transform is applied to all parts.
+        // Due to shear the part rotation will be different for different parts of the board.  We will
+        // calculate the corrected rotation on a part by part basis.
+        //
+
+        private void TestMapping()
+        {
+            AffineTransform.MainForm = this;
+            //double[,,] Fids = {{{31.11, 2.54},{64.6360492,40.81275}},
+            //                   {{31.11,102.87},{66.0278242,141.302125}},
+            //                   {{1.91,102.87},{36.6897713,141.419125}},
+            //                   {{1.91,2.54},{35.2774575,41.00375}}};
+            double[,,] Fids = {{{31.11, 2.54},{66.5192035, 41.455625}},
+                               {{31.11,102.87},{66.2437546,141.881375}},
+                               {{1.91,102.87},{36.8946506,141.562}},
+                               {{1.91,2.54},{37.1597104,41.147375}}};
+
+            PhysicalComponent[] MyFids = new PhysicalComponent[4];
+            for(int i=0; i < 4; i++)
+            {
+                MyFids[i] = new PhysicalComponent();
+                DisplayText("i = " + i.ToString("0.000", CultureInfo.InvariantCulture));
+                MyFids[i].X_nominal = Fids[i, 0, 0];
+                MyFids[i].Y_nominal = Fids[i, 0, 1];
+                MyFids[i].X_machine = Fids[i, 1, 0];
+                MyFids[i].Y_machine = Fids[i, 1, 1];
+            }
+            AffineMappingBoard2Machine_m(MyFids);
+        }
+    private bool AffineMappingBoard2Machine_m(PhysicalComponent[] Fiducials)
+        {
+            // Find the medians
+            double[] NomMean = { 0, 0 };
+            double[] MeasMean = { 0, 0 };
+            AffineTransform.Point[] nominalPts = new AffineTransform.Point[Fiducials.Length];
+            AffineTransform.Point[] measuredPts = new AffineTransform.Point[Fiducials.Length];
+            //Use this loop for multiple purposes. Also fill in data sets that the transforms will operate on
+            for (int i = 0; i < Fiducials.Length; i++)
+            {
+                NomMean[0] += Fiducials[i].X_nominal;
+                NomMean[1] += Fiducials[i].Y_nominal;
+                nominalPts[i] = new AffineTransform.Point(Fiducials[i].X_nominal, Fiducials[i].Y_nominal);
+                MeasMean[0] += Fiducials[i].X_machine;
+                MeasMean[1] += Fiducials[i].Y_machine;
+                measuredPts[i] = new AffineTransform.Point(Fiducials[i].X_machine, Fiducials[i].Y_machine);
+                DisplayText("Fid: " + i.ToString()
+                     + " NomX: " + Fiducials[i].X_nominal.ToString("0.00000", CultureInfo.InvariantCulture)
+                +" NomY: " + Fiducials[i].Y_nominal.ToString("0.00000", CultureInfo.InvariantCulture)
+            +" MachX: " + Fiducials[i].X_machine.ToString("0.00000", CultureInfo.InvariantCulture)
+            +" MachY: " + Fiducials[i].Y_machine.ToString("0.00000", CultureInfo.InvariantCulture));
+        }
+        NomMean[0] /= Fiducials.Length;
+            NomMean[1] /= Fiducials.Length;
+            MeasMean[0] /= Fiducials.Length;
+            MeasMean[1] /= Fiducials.Length;
+//            double dAng = Math.Atan2(measuredPts[0].getY() - measuredPts[3].getY(), measuredPts[0].getX() - measuredPts[3].getX());
+            // We have the means for both nominal and measured fiducial locations
+            // Later we will build on the nominal mean transform to create the complete transform
+            AffineTransform TheAT = AffineTransform.getTranslateInstance(-NomMean[0], -NomMean[1]);
+            AffineTransform MeasMeanAT = AffineTransform.getTranslateInstance(-MeasMean[0], -MeasMean[1]);
+            // Now we want to apply the transforms to the data sets
+            AffineTransform.Point[] NomATedPts = TheAT.transformPoints(nominalPts);
+            AffineTransform.Point[] MeasMeanPts = MeasMeanAT.transformPoints(measuredPts);
+            AffineTransform.Point.display(NomATedPts);
+            AffineTransform.Point.display(MeasMeanPts);
+            double[] MeasAngles = new double[Fiducials.Length];
+            double[] MeasDist = new double[Fiducials.Length];
+            double[] NomAngles = new double[Fiducials.Length];
+            double[] NomDist = new double[Fiducials.Length];
+            double[] DiffAngles = new double[Fiducials.Length];
+            double[] DiffDist = new double[Fiducials.Length];
+            double MeasDistAve = 0;
+            double NomDistAve = 0;
+            // We are going to find the transform that transforms the nominal locations into the machine locations.
+            // Here we establish some values from the measured locations that we will be comparing the nominal
+            // locations to as we work through the various transforms
+            for (int i = 0; i < Fiducials.Length; i++)
+            {
+                double MeasY = MeasMeanPts[i].getY();
+                MeasAngles[i] = Math.Atan2(MeasY, MeasMeanPts[i].getX());
+                MeasDist[i] = CalcDist(MeasMeanPts[i].getX(), MeasY);
+                MeasDistAve += MeasDist[i];
+            }
+            MeasDistAve /= Fiducials.Length;
+            // First we want to set the scale.  A perfectly calibrated machine should give a value of 1.
+            // The test data I was using has been giving 1.001 or about 0.1%
+            for (int i = 0; i < Fiducials.Length; i++)
+            {
+                NomDist[i] = CalcDist(NomATedPts[i].getX(), NomATedPts[i].getY());
+                NomDistAve += NomDist[i];
+            }
+            NomDistAve /= Fiducials.Length;
+            // Now set the scale to make nominal values fit to the measured values
+            double Scale = MeasDistAve / NomDistAve;
+            AffineTransform ScaleAT = AffineTransform.getScaleInstance(Scale, Scale);
+            TheAT.preAppend(ScaleAT);
+            NomATedPts = TheAT.transformPoints(nominalPts);
+            AffineTransform.Point.display(NomATedPts);
+            //Shear affects distances and angles.  Rotation doesn't affect distance.  So we can detect
+            //shear by seeing if the distances match and adjusting it until they do.
+            //Remeasure the nominal distance now that they are scaled with the scaled values
+            //double MaxY = -1000;
+            int MaxIdx = 0;
+            double MaxY = 0;
+            //double MinY = 1000;
+            //int MinIdx = 0;
+            //   double MaxDistDiff = 0;
+            //We will calculate the shear to make each segment match in length.  We will take the average
+            //of all the values
+            //We are only moving the X component by kY.  The new distance will be
+            //sqrt((X + kY)^2 + Y^2) = Target distance (TD). We square both (X + kY)^2 = TD^2 - Y^2 => kY = sqrt(TD^2-Y^2) - X
+            // k = (sqrt(TD^2-Y^2)-X)/Y
+            //There is a division by Y.  To avoid dividing by 0 we will skip Y values near 0.  In theory, there should be no difference
+            //due to shear near Y of 0 in any case.  So the numbers near 0 are very sensitive to noise in the data.
+            double AveShear = 0;
+            double AveCnt = 0;
+            for (int i = 0; i < Fiducials.Length; i++)
+            {
+                double NomY = NomATedPts[i].getY();
+                NomDist[i] = CalcDist(NomATedPts[i].getX(), NomY);
+                NomDistAve += NomDist[i];
+                DiffDist[i] = MeasDist[i] - NomDist[i];
+                if(Math.Abs(NomY) > 1)
+                {
+                    AveShear += Math.Abs(Math.Sqrt(Math.Pow(MeasDist[i], 2) - Math.Pow(NomY, 2)) - Math.Abs(NomATedPts[i].getX())) / Math.Abs(NomY);
+                    AveCnt++;
+                }
+                DisplayText("DiffDist: " + DiffDist[i].ToString() + " MeasDist: " + MeasDist[i].ToString() + " NomDist: " + NomDist[i].ToString());
+                if (Math.Abs(NomY) > MaxY)
+                {
+                    MaxY = Math.Abs(NomY);
+                    MaxIdx = i;
+                }
+            }
+            if (AveCnt != 0)
+            {
+                AveShear /= AveCnt;
+                // We now have the magnitude, Now to find the sign.  The Max Y point is a good one
+                AveShear *= Math.Sign(DiffDist[MaxIdx] * NomATedPts[MaxIdx].getY());
+                //            DisplayText("MaxIdx: " + MaxIdx.ToString() + " MeasDist: " + MeasDist[MaxIdx].ToString() + " NomDist: " + NomDist[MaxIdx].ToString());
+               // DisplayText("X: " + NomATedPts[MaxIdx].getX().ToString() + " Y: " + NomATedPts[MaxIdx].getY().ToString());
+                //We are trying to make the nominal match the measured, so the measured is the target distance
+                //            double ShearX = Math.Sign(DiffDist[MaxIdx]) *(Math.Sqrt(Math.Pow(MeasDist[MaxIdx], 2) - Math.Pow(NomATedPts[MaxIdx].getY(), 2)) - Math.Abs(NomATedPts[MaxIdx].getX()))/NomATedPts[MaxIdx].getY();
+                AffineTransform ShearAT = AffineTransform.getShearInstance(AveShear, 0);
+                TheAT.preAppend(ShearAT);
+                NomATedPts = TheAT.transformPoints(nominalPts);
+                DisplayText("Shear: " + AveShear.ToString("0.00000", CultureInfo.InvariantCulture));
+                AffineTransform.Point.display(NomATedPts);
+                for (int i = 0; i < Fiducials.Length; i++)
+                {
+                    NomDist[i] = CalcDist(NomATedPts[i].getX(), NomATedPts[i].getY());
+                    NomDistAve += NomDist[i];
+                    DiffDist[i] = MeasDist[i] - NomDist[i];
+                    DisplayText("DiffDist: " + DiffDist[i].ToString() + " MeasDist: " + MeasDist[i].ToString() + " NomDist: " + NomDist[i].ToString());
+                }
+            }
+            // Now to determine the rotation
+            double AveAngleDiff = 0;
+            for (int i = 0; i < Fiducials.Length; i++)
+            {
+                NomAngles[i] = Math.Atan2(NomATedPts[i].getY(), NomATedPts[i].getX());
+//                DiffAngles[i] = MeasAngles[i] - NomAngles[i];
+                DiffAngles[i] = NomAngles[i] - MeasAngles[i];
+                DisplayText("NomAngle: " + (NomAngles[i] * 180 / Math.PI).ToString());
+                DisplayText("MeasAngle: " + (MeasAngles[i] * 180 / Math.PI).ToString());
+                DisplayText("DiffAngle: " + (DiffAngles[i] * 180 / Math.PI).ToString());
+                AveAngleDiff += DiffAngles[i];
+            }
+            AveAngleDiff /= Fiducials.Length;
+            AffineTransform RotateAT = AffineTransform.getRotateRadiansInstance(AveAngleDiff);
+            TheAT.preAppend(RotateAT);
+            NomATedPts = TheAT.transformPoints(nominalPts);
+            DisplayText("Rotation: " + (AveAngleDiff * 180 / Math.PI).ToString("0.00000", CultureInfo.InvariantCulture));
+            AffineTransform.Point.display(NomATedPts);
+            DisplayText("Measured Mean");
+            AffineTransform.Point.display(MeasMeanPts);
+            //            double AveDiff = 0;
+            //            double MaxDiff;
+            //            double MinDiff;
+            //            double MaxMeasY = 0;
+            //            double MinMeasY = 0;
+            //            AffineTransform ShearAT = new AffineTransform();
+            //            AffineTransform.Point[] MeasShearPts = new AffineTransform.Point[Fiducials.Length];
+            //            int[] MaxMin = { MinIdx, MaxIdx };
+            //            for (int Tries = 0; Tries < 20; Tries++)
+            //            {
+            //                AveDiff = 0;
+            //                MaxDiff = -2 * Math.PI;
+            //                MinDiff = 2 * Math.PI;
+            //                ShearAT = AffineTransform.getShearInstance(ShearX, 0);
+            //                MeasShearPts = ShearAT.transformPoints(MeasMeanPts);
+            //                AffineTransform.Point.display(MeasShearPts);
+            //                MaxMeasY = MeasShearPts[MaxIdx].getY();
+            //                MinMeasY = MeasShearPts[MinIdx].getY();
+            ////                for (int j = 0; j < 2; j++)
+            //                for (int i = 0; i < Fiducials.Length; i++)
+            //                {
+            //                    //int i = MaxMin[j];
+            //                    //double ShearY = MeasShearPts[i].getY();
+            //                    MeasAngles[i] = Math.Atan2(MeasShearPts[i].getY(), MeasShearPts[i].getX());
+            //                    DiffAngles[i] = NomAngles[i] - MeasAngles[i];
+            //                    DisplayText("NomAngle: " + (NomAngles[i] * 180 / Math.PI).ToString());
+            //                    DisplayText("MeasAngle: " + (MeasAngles[i] * 180 / Math.PI).ToString());
+            //                    DisplayText("DiffAngle: " + (DiffAngles[i] * 180 / Math.PI).ToString());
+            //                    AveDiff += DiffAngles[i];
+            //                    if (DiffAngles[i] > MaxDiff) MaxDiff = DiffAngles[i];
+            //                    if (DiffAngles[i] < MinDiff) MinDiff = DiffAngles[i];
+            //                }
+            ////                AveDiff /= 2;
+            //                AveDiff /= Fiducials.Length;
+            //                DisplayText("AveDiff: " + (AveDiff * 180 / Math.PI).ToString());
+            //                DisplayText("MaxDiff: " + (MaxDiff * 180/Math.PI).ToString() + " MinDiff: " + (MinDiff * 180 / Math.PI).ToString());
+            //                if (Math.Abs(MaxDiff - MinDiff) <= 0.01 * Math.PI / 180) break; //We are done if within 0.01 degree
+            //                //Not there estimate new shear factor.  Shear is indicated by a difference in the difference between
+            //                //Nominal and measured angles.  If there were no shear the difference would be the same and a simple
+            //                //rotation would line up nominal with measured.  The difference is due to a difference in the x position
+            //                //The shear formula is new X = old X + k*y where k is the shear factor.  The question is, how does this relate
+            //                //to the angle.  A close approximation would be ang = atan(y/ky) => tan(ang) = 1/k => k = 1/tan(ang)
+            //                //ShearX += Math.Tan(MaxDiff - MinDiff);// / (MaxNomY - MinNomY);
+            //                //ShearX -= (DiffAngles[0] - AveDiff);// / (MaxNomY - MinNomY);
+            //                ShearX -= Math.Tan(MaxDiff - MinDiff);
+            //                DisplayText("Shear: " + ShearX.ToString());
+            //            }
+            //// Now we have the Shear and Rotation
+            //AffineTransform RotateAT = AffineTransform.getRotateRadiansInstance(AveDiff);
+            ////This transform should bring measured in line with nominal
+            //MeasShearPts = RotateAT.transformPoints(MeasShearPts);
+            //// Now get the Max and Min Y of the 
+            //MaxMeasY = MeasShearPts[MaxIdx].getY();
+            //MinMeasY = MeasShearPts[MinIdx].getY();
+            // Now we have Scale.  Note this pushes all the measurement error into the X direction
+            //Build the Nominal side, with transforms order matters.  And the order is from the back
+            //to the front, so we preAppend each later transform
+            //TheAT.preAppend(RotateAT);
+            //TheAT.preAppend(ScaleAT);
+            //            TheAT.preAppend(MeasMeanAT.inverse()); // Now we have our transform
+            TheAT.preAppend(AffineTransform.getTranslateInstance(MeasMean[0], MeasMean[1])); // Now we have our transform
+            // Tell the world about the transform
+            DisplayText("Translation: X: " + (MeasMean[0] - NomMean[0]).ToString("0.000", CultureInfo.InvariantCulture) +
+                                    " Y: " + (MeasMean[1] - NomMean[1]).ToString("0.000", CultureInfo.InvariantCulture));
+            DisplayText("Shear: " + AveShear.ToString("0.00000", CultureInfo.InvariantCulture));
+            DisplayText("Rotation: " + (AveAngleDiff * 180/Math.PI).ToString("0.000", CultureInfo.InvariantCulture));
+            DisplayText("Scale: " + Scale.ToString("0.000", CultureInfo.InvariantCulture));
+
+            //Now we can fix up the CAD data. Total rotation is part due to shear + rotation
+            AveAngleDiff -= Math.Atan(AveShear);
+            DisplayText("All Rotation: " + (AveAngleDiff * 180 / Math.PI).ToString("0.000", CultureInfo.InvariantCulture));
+            AveAngleDiff *= 180 / Math.PI;  // The table is in degrees
+
+            foreach (DataGridViewRow Row in CadData_GridView.Rows)
+            {
+                // build a point from CAD data values
+                double X;
+                double Y;
+                double.TryParse(Row.Cells["X_nominal"].Value.ToString(), out X);
+                double.TryParse(Row.Cells["Y_nominal"].Value.ToString(), out Y);
+                AffineTransform.Point CompLoc = new AffineTransform.Point(X, Y);
+                // transform it
+                CompLoc = TheAT.transformPoint(CompLoc);
+                Row.Cells["X_machine"].Value = CompLoc.getX().ToString("0.000", CultureInfo.InvariantCulture);
+                Row.Cells["Y_machine"].Value = CompLoc.getY().ToString("0.000", CultureInfo.InvariantCulture);
+                double rot;
+                double.TryParse(Row.Cells["Rotation"].Value.ToString(), out rot);
+                rot += AveAngleDiff;
+                //                rot += DiffAngle * 180/Math.PI;
+                while (rot > 360.0)
+                {
+                    rot -= 360.0;
+                }
+                while (rot < 0.0)
+                {
+                    rot += 360.0;
+                }
+                Row.Cells["Rotation_machine"].Value = rot.ToString("0.0000", CultureInfo.InvariantCulture);
+
+            }
+            // Refresh UI:
+            Update_GridView(CadData_GridView);
+
+            //Check it out
+            NomATedPts = TheAT.transformPoints(nominalPts);
+            bool DataOk = true;
+            double dx, dy;
+            for (int i = 0; i < Fiducials.Length; i++)
+            {
+                dx = Math.Abs(NomATedPts[i].getX() - Fiducials[i].X_machine);
+                dy = Math.Abs(NomATedPts[i].getY() - Fiducials[i].Y_machine);
+                DisplayText(Fiducials[i].Designator +
+                    ": x_meas= " + Fiducials[i].X_machine.ToString("0.000", CultureInfo.InvariantCulture) +
+                    ", x_calc= " + NomATedPts[i].getX().ToString("0.000", CultureInfo.InvariantCulture) +
+                    ", dx= " + dx.ToString("0.000", CultureInfo.InvariantCulture) +
+                    ": y_meas= " + Fiducials[i].Y_machine.ToString("0.000", CultureInfo.InvariantCulture) +
+                    ", y_calc= " + NomATedPts[i].getY().ToString("0.000", CultureInfo.InvariantCulture) +
+                    ", dy= " + dy.ToString("0.000", CultureInfo.InvariantCulture));
+                if ((Math.Abs(dx) > 0.4) || (Math.Abs(dy) > 0.4))
+                {
+                    DataOk = false;
+                }
+            };
+            if (!DataOk)
+            {
+                DisplayText(" ** A fiducial moved more than 0.4mm from its measured location");
+                DisplayText(" ** when applied the same calculations than regular componets.");
+                DisplayText(" ** (Maybe the camera picked a via instead of a fiducial?)");
+                DisplayText(" ** Placement data is likely not good.");
+                DialogResult dialogResult = ShowMessageBox(
+                    "Nominal to machine trasnformation seems to be off. (See log window)",
+                    "Cancel operation?",
+                    MessageBoxButtons.OKCancel
+                );
+                if (dialogResult == DialogResult.Cancel)
+                {
+                    return false;
+                }
+            }
+            // Done!
+
+            return true;
+        }
+        bool UseAffine = true;
+
+        // =================================================================================
         // BuildMachineCoordinateData_m():
         private bool BuildMachineCoordinateData_m()
         {
@@ -8474,125 +8953,182 @@ namespace LitePlacer
 
             // Find the homographic tranformation from CAD data (fiducials.nominal) to measured machine coordinates
             // (fiducials.machine):
-            Transform transform = new Transform();
-            HomographyEstimation.Point[] nominals = new HomographyEstimation.Point[Fiducials.Length];
-            HomographyEstimation.Point[] measured = new HomographyEstimation.Point[Fiducials.Length];
-            // build point data arrays:
-            for (int i = 0; i < Fiducials.Length; i++)
+            if (UseAffine)
             {
-                nominals[i].X = Fiducials[i].X_nominal;
-                nominals[i].Y = Fiducials[i].Y_nominal;
-                nominals[i].W = 1.0;
-                measured[i].X = Fiducials[i].X_machine;
-                measured[i].Y = Fiducials[i].Y_machine;
-                measured[i].W = 1.0;
+                AffineMappingBoard2Machine_m(Fiducials);
             }
-            // find the tranformation
-            bool res = transform.Estimate(nominals, measured, ErrorMetric.Transfer, 450, 450);  // the PCBs are smaller than 450mm
-            if (!res)
+            else
             {
-                ShowMessageBox(
-                    "Transform estimation failed.",
-                    "Data error",
-                    MessageBoxButtons.OK);
-                return false;
-            }
-            // Analyze the transform: Displacement is for debug. We could also calculate X & Y stretch and shear, but why bother.
-            // Find out the displacement in the transform (where nominal origin ends up):
-            HomographyEstimation.Point Loc, Loc2;
-            Loc.X = 0.0;
-            Loc.Y = 0.0;
-            Loc.W = 1.0;
-            Loc = transform.TransformPoint(Loc);
-            Loc = Loc.NormalizeHomogeneous();
-            DisplayText("Transform:");
-            DisplayText("dX= " + (Loc.X).ToString());
-            DisplayText("dY= " + Loc.Y.ToString());
-            // We do need rotation. Find out by rotatíng a unit vector:
-            Loc2.X = 1.0;
-            Loc2.Y = 0.0;
-            Loc2.W = 1.0;
-            Loc2 = transform.TransformPoint(Loc2);
-            Loc2 = Loc2.NormalizeHomogeneous();
-            DisplayText("dX= " + Loc2.X.ToString());
-            DisplayText("dY= " + Loc2.Y.ToString());
-            double angle = Math.Asin(Loc2.Y - Loc.Y) * 180.0 / Math.PI; // in degrees
-            DisplayText("angle= " + angle.ToString());
-
-            // Calculate machine coordinates of all components:
-            foreach (DataGridViewRow Row in CadData_GridView.Rows)
-            {
-                // build a point from CAD data values
-                double.TryParse(Row.Cells["X_nominal"].Value.ToString(), out Loc.X);
-                double.TryParse(Row.Cells["Y_nominal"].Value.ToString(), out Loc.Y);
-                Loc.W = 1;
-                // transform it
-                Loc = transform.TransformPoint(Loc);
-                Loc = Loc.NormalizeHomogeneous();
-                // store calculated location values
-                Row.Cells["X_machine"].Value = Loc.X.ToString("0.000", CultureInfo.InvariantCulture);
-                Row.Cells["Y_machine"].Value = Loc.Y.ToString("0.000", CultureInfo.InvariantCulture);
-                // handle rotation
-                double rot;
-                double.TryParse(Row.Cells["Rotation"].Value.ToString(), out rot);
-                rot += angle;
-                while (rot > 360.0)
+                Transform transform = new Transform();
+                HomographyEstimation.Point[] nominals = new HomographyEstimation.Point[Fiducials.Length];
+                HomographyEstimation.Point[] measured = new HomographyEstimation.Point[Fiducials.Length];
+                // build point data arrays:
+                double Min = 1000;
+                double Max = 0;
+                int MinIdx = 0;
+                int MaxIdx = 0;
+                for (int i = 0; i < Fiducials.Length; i++)
                 {
-                    rot -= 360.0;
+                    string sLine = "[[" + Fiducials[i].X_nominal.ToString() + ", " + Fiducials[i].Y_nominal.ToString() + "],[";
+                    sLine += Fiducials[i].X_machine.ToString() + ", " + Fiducials[i].Y_machine.ToString() + "]], \\";
+                    DisplayText(sLine);
+                    //DisplayText("Fiducial " + i.ToString());
+                    //DisplayText("Nominal X " + Fiducials[i].X_nominal.ToString());
+                    //DisplayText("Nominal Y " + Fiducials[i].Y_nominal.ToString());
+                    //DisplayText("Measured X " + Fiducials[i].X_machine.ToString());
+                    //DisplayText("Measured Y " + Fiducials[i].Y_machine.ToString());
+                    nominals[i].X = Fiducials[i].X_nominal;
+                    nominals[i].Y = Fiducials[i].Y_nominal;
+                    nominals[i].W = 1.0;
+                    measured[i].X = Fiducials[i].X_machine;
+                    measured[i].Y = Fiducials[i].Y_machine;
+                    measured[i].W = 1.0;
+                    double Dist = CalcDist(nominals[i].X, nominals[i].Y);
+                    if (Dist < Min)
+                    {
+                        Min = Dist;
+                        MinIdx = i;
+                    }
+                    if (Dist > Max)
+                    {
+                        Max = Dist;
+                        MaxIdx = i;
+                    }
                 }
-                while (rot < 0.0)
+                //Home brew
+                //Above we found fiducials closest to and furtherest from  0,0
+                //The transform should translate, scale, rotate and translate
+                //double NomDist = CalcDist(nominals[MaxIdx].X - nominals[MinIdx].X, nominals[MaxIdx].Y - nominals[MinIdx].Y);
+                //double MeasuredDist = CalcDist(measured[MaxIdx].X - measured[MinIdx].X, measured[MaxIdx].Y - measured[MinIdx].Y);
+                //double Scale = MeasuredDist / NomDist;
+                //double NomAngle = Math.Atan2(nominals[MaxIdx].Y - nominals[MinIdx].Y, nominals[MaxIdx].X - nominals[MinIdx].X);
+                //double MeasuredAngle = Math.Atan2(measured[MaxIdx].Y - measured[MinIdx].Y, measured[MaxIdx].X - measured[MinIdx].X);
+                //double DiffAngle = MeasuredAngle - NomAngle;
+                //transform.
+                // find the tranformation
+                bool res = transform.Estimate(nominals, measured, ErrorMetric.Transfer, 450, 450);  // the PCBs are smaller than 450mm
+                if (!res)
                 {
-                    rot += 360.0;
+                    ShowMessageBox(
+                        "Transform estimation failed.",
+                        "Data error",
+                        MessageBoxButtons.OK);
+                    return false;
                 }
-                Row.Cells["Rotation_machine"].Value = rot.ToString("0.0000", CultureInfo.InvariantCulture);
-
-            }
-            // Refresh UI:
-            Update_GridView(CadData_GridView);
-
-            // For debug, compare fiducials true measured locations and the locations.
-            // Also, if a fiducials moves more than 0.5mm, something is off (maybe there
-            // was a via too close to a fid, and we picked that for a measurement). Warn the user!
-            bool DataOk = true;
-            double dx, dy;
-            for (int i = 0; i < Fiducials.Length; i++)
-            {
-                Loc.X = Fiducials[i].X_nominal;
-                Loc.Y = Fiducials[i].Y_nominal;
+                // Analyze the transform: Displacement is for debug. We could also calculate X & Y stretch and shear, but why bother.
+                // Find out the displacement in the transform (where nominal origin ends up):
+                HomographyEstimation.Point Loc, Loc2;
+                Loc.X = 0.0;
+                Loc.Y = 0.0;
                 Loc.W = 1.0;
                 Loc = transform.TransformPoint(Loc);
                 Loc = Loc.NormalizeHomogeneous();
-                dx = Math.Abs(Loc.X - Fiducials[i].X_machine);
-                dy = Math.Abs(Loc.Y - Fiducials[i].Y_machine);
-                DisplayText(Fiducials[i].Designator +
-                    ": x_meas= " + Fiducials[i].X_machine.ToString("0.000", CultureInfo.InvariantCulture) +
-                    ", x_calc= " + Loc.X.ToString("0.000", CultureInfo.InvariantCulture) +
-                    ", dx= " + dx.ToString("0.000", CultureInfo.InvariantCulture) +
-                    ": y_meas= " + Fiducials[i].Y_machine.ToString("0.000", CultureInfo.InvariantCulture) +
-                    ", y_calc= " + Loc.Y.ToString("0.000", CultureInfo.InvariantCulture) +
-                    ", dy= " + dy.ToString("0.000", CultureInfo.InvariantCulture));
-                if ((Math.Abs(dx) > 0.4) || (Math.Abs(dy) > 0.4))
+                DisplayText("Transform:");
+                DisplayText("dX= " + (Loc.X).ToString());
+                DisplayText("dY= " + Loc.Y.ToString());
+                // We do need rotation. Find out by rotatíng a unit vector:
+                Loc2.X = 1.0;
+                Loc2.Y = 0.0;
+                Loc2.W = 1.0;
+                Loc2 = transform.TransformPoint(Loc2);
+                Loc2 = Loc2.NormalizeHomogeneous();
+                DisplayText("dX= " + Loc2.X.ToString());
+                DisplayText("dY= " + Loc2.Y.ToString());
+                double angle = Math.Asin(Loc2.Y - Loc.Y) * 180.0 / Math.PI; // in degrees
+                DisplayText("angle= " + angle.ToString());
+
+                // Calculate machine coordinates of all components:
+                //            HomographyEstimation.Point Loc;
+                foreach (DataGridViewRow Row in CadData_GridView.Rows)
                 {
-                    DataOk = false;
+                    // build a point from CAD data values
+                    double.TryParse(Row.Cells["X_nominal"].Value.ToString(), out Loc.X);
+                    double.TryParse(Row.Cells["Y_nominal"].Value.ToString(), out Loc.Y);
+                    Loc.W = 1;
+                    // transform it
+                    Loc = transform.TransformPoint(Loc);
+                    Loc = Loc.NormalizeHomogeneous();
+                    // store calculated location values
+                    //Translate nominal to where min fiducial is 0,0
+                    //Loc.X -= nominals[MinIdx].X;
+                    //Loc.Y -= nominals[MinIdx].Y;
+                    //// Now rescale it
+                    //Loc.X *= Scale;
+                    //Loc.Y *= Scale;
+                    //// handle rotation
+                    //double CosTerm = Math.Cos(DiffAngle); //DiffAngle came Atan2 and is in radians
+                    //double SinTerm = Math.Sin(DiffAngle); //DiffAngle came Atan2 and is in radians
+                    ////Rotate (See https://en.wikipedia.org/wiki/Rotation_matrix)
+                    //double NewX = Loc.X * CosTerm - Loc.Y * SinTerm;
+                    //Loc.Y = Loc.X * SinTerm + Loc.Y * CosTerm;
+                    //Loc.X = NewX;
+                    ////Now translate to measured location
+                    //Loc.X += measured[MinIdx].X;
+                    //Loc.Y += measured[MinIdx].Y;
+                    Row.Cells["X_machine"].Value = Loc.X.ToString("0.000", CultureInfo.InvariantCulture);
+                    Row.Cells["Y_machine"].Value = Loc.Y.ToString("0.000", CultureInfo.InvariantCulture);
+                    double rot;
+                    double.TryParse(Row.Cells["Rotation"].Value.ToString(), out rot);
+                    rot += angle;
+                    //                rot += DiffAngle * 180/Math.PI;
+                    while (rot > 360.0)
+                    {
+                        rot -= 360.0;
+                    }
+                    while (rot < 0.0)
+                    {
+                        rot += 360.0;
+                    }
+                    Row.Cells["Rotation_machine"].Value = rot.ToString("0.0000", CultureInfo.InvariantCulture);
+
                 }
-            };
-            if (!DataOk)
-            {
-                DisplayText(" ** A fiducial moved more than 0.4mm from its measured location");
-                DisplayText(" ** when applied the same calculations than regular componets.");
-                DisplayText(" ** (Maybe the camera picked a via instead of a fiducial?)");
-                DisplayText(" ** Placement data is likely not good.");
-                DialogResult dialogResult = ShowMessageBox(
-                    "Nominal to machine trasnformation seems to be off. (See log window)",
-                    "Cancel operation?",
-                    MessageBoxButtons.OKCancel
-                );
-                if (dialogResult == DialogResult.Cancel)
+                // Refresh UI:
+                Update_GridView(CadData_GridView);
+
+                // For debug, compare fiducials true measured locations and the locations.
+                // Also, if a fiducials moves more than 0.5mm, something is off (maybe there
+                // was a via too close to a fid, and we picked that for a measurement). Warn the user!
+                bool DataOk = true;
+                double dx, dy;
+                for (int i = 0; i < Fiducials.Length; i++)
                 {
-                    return false;
+                    Loc.X = Fiducials[i].X_nominal;
+                    Loc.Y = Fiducials[i].Y_nominal;
+                    Loc.W = 1.0;
+                    Loc = transform.TransformPoint(Loc);
+                    Loc = Loc.NormalizeHomogeneous();
+                    dx = Math.Abs(Loc.X - Fiducials[i].X_machine);
+                    dy = Math.Abs(Loc.Y - Fiducials[i].Y_machine);
+                    DisplayText(Fiducials[i].Designator +
+                        ": x_meas= " + Fiducials[i].X_machine.ToString("0.000", CultureInfo.InvariantCulture) +
+                        ", x_calc= " + Loc.X.ToString("0.000", CultureInfo.InvariantCulture) +
+                        ", dx= " + dx.ToString("0.000", CultureInfo.InvariantCulture) +
+                        ": y_meas= " + Fiducials[i].Y_machine.ToString("0.000", CultureInfo.InvariantCulture) +
+                        ", y_calc= " + Loc.Y.ToString("0.000", CultureInfo.InvariantCulture) +
+                        ", dy= " + dy.ToString("0.000", CultureInfo.InvariantCulture));
+                    if ((Math.Abs(dx) > 0.4) || (Math.Abs(dy) > 0.4))
+                    {
+                        DataOk = false;
+                    }
+                };
+                if (!DataOk)
+                {
+                    DisplayText(" ** A fiducial moved more than 0.4mm from its measured location");
+                    DisplayText(" ** when applied the same calculations than regular componets.");
+                    DisplayText(" ** (Maybe the camera picked a via instead of a fiducial?)");
+                    DisplayText(" ** Placement data is likely not good.");
+                    DialogResult dialogResult = ShowMessageBox(
+                        "Nominal to machine trasnformation seems to be off. (See log window)",
+                        "Cancel operation?",
+                        MessageBoxButtons.OKCancel
+                    );
+                    if (dialogResult == DialogResult.Cancel)
+                    {
+                        return false;
+                    }
                 }
+                // Done!
             }
-            // Done! 
             ValidMeasurement_checkBox.Checked = true;
             return true;
         }// end BuildMachineCoordinateData_m
@@ -8620,6 +9156,98 @@ namespace LitePlacer
         private void ChangeNeedle_button_Click(object sender, EventArgs e)
         {
             ChangeNeedle_m();
+        }
+
+        private void VerifyNeedle_button_Click(object sender, EventArgs e)
+        {
+            double X = 0;
+            double Y = 0;
+            double[,] TestVals = new double[16, 2];
+            double Dist;
+            int res = 0;
+            double VirtualUpCamCncX = Properties.Settings.Default.UpCam_PositionX - Properties.Settings.Default.DownCam_NeedleOffsetX;
+            double VirtualUpCamCncY = Properties.Settings.Default.UpCam_PositionY - Properties.Settings.Default.DownCam_NeedleOffsetY;
+            double MarkX = Cnc.CurrentX;
+            double MarkY = Cnc.CurrentY;
+            double MarkZ = Cnc.CurrentZ;
+            double MarkA = Cnc.CurrentA;
+            // We don't want slack compensation on save the present state to restore
+            bool SaveSlackCompState = Cnc.SlackCompensation;
+            bool SaveSlackCompAState = Cnc.SlackCompensationA;
+
+            bool UpCamWasRunning = false;
+            if (UpCamera.Active)
+            {
+                UpCamWasRunning = true;
+            }
+            SelectCamera(UpCamera);
+            if (!UpCamera.IsRunning())
+            {
+                ShowMessageBox(
+                    "Up camera not running, can't verify needle.",
+                    "Needle calibration failed.",
+                    MessageBoxButtons.OK);
+                // return false;
+            }
+            Cnc.SlackCompensation = false;
+            Cnc.SlackCompensationA = false;
+            // take needle up
+            bool result = true;
+            result &= CNC_Z_m(0.0);
+            Needle.Move_m(VirtualUpCamCncX, VirtualUpCamCncY, 0);
+            result &= CNC_Z_m(Properties.Settings.Default.General_ZtoPCB - 1.0); // Average small component height 1mm (?)
+            ZGuardOff();
+            // measure the values
+            SetNeedleMeasurement();
+            for (int TestA = 0; TestA < 3600; TestA += 225)
+            {
+                Needle.Move_m(VirtualUpCamCncX, VirtualUpCamCncY, TestA / 10);
+                for (int tries = 0; tries < 10; tries++)
+                {
+                    Thread.Sleep(20);
+                    Application.DoEvents(); // Give video processing a chance to catch a new frame
+                    res = UpCamera.GetClosestCircle(out X, out Y, 4.0 / Properties.Settings.Default.UpCam_XmmPerPixel);
+                    if (res != 0)
+                    {
+                        X *= Properties.Settings.Default.UpCam_XmmPerPixel;
+                        Y *= Properties.Settings.Default.UpCam_YmmPerPixel;
+                        TestVals[TestA / 225, 0] = X;
+                        TestVals[TestA / 225, 1] = Y;
+                    }
+                }
+            }
+            ZGuardOn();
+            Cnc.SlackCompensation = SaveSlackCompState;
+            Cnc.SlackCompensationA = SaveSlackCompAState;
+
+            // take needle up
+            result &= CNC_Z_m(0.0);
+
+            // restore position
+             result &= CNC_XYA_m(MarkX, MarkY, MarkA);
+
+            if (!UpCamWasRunning)
+            {
+                SelectCamera(DownCamera);
+            }
+            if (result)
+            {
+                for (int i = 0; i < 16; i++)
+                {
+                    Dist = CalcDist(TestVals[i, 0], TestVals[i, 0]);
+                    DisplayText("A: " + (i *22.5).ToString("0.000") +
+                        ", X: " + TestVals[i,0].ToString("0.000") +
+                        ", Y: " + TestVals[i,1].ToString("0.000") +
+                        ", Dist: " + Dist.ToString("0.000"));
+                }
+            }
+            else
+            {
+                ShowMessageBox(
+                    "Needle verification failed.",
+                    "Needle verification failed.",
+                    MessageBoxButtons.OK);
+            }
         }
 
 
@@ -8738,20 +9366,35 @@ namespace LitePlacer
         {
             double diffX;
             double diffY;
+            double diffA;
             double dNomX;
             double dNomY;
+            double dNomA;
             double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["X_machine"].Value.ToString(), out diffX);
             double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["Y_machine"].Value.ToString(), out diffY);
+            double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["Rotation_machine"].Value.ToString(), out diffA);
             double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["X_nominal"].Value.ToString(), out dNomX);
             double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["Y_nominal"].Value.ToString(), out dNomY);
+            double.TryParse(CadData_GridView.CurrentCell.OwningRow.Cells["Rotation"].Value.ToString(), out dNomA);
             diffX -= Cnc.CurrentX;
             diffY -= Cnc.CurrentY;
+            diffA -= DownCamera.RotateCrossAng;
             dNomX -= diffX;
             dNomY -= diffY;
+            dNomA -= diffA;
             CadData_GridView.CurrentCell.OwningRow.Cells["X_machine"].Value = Cnc.CurrentX.ToString("0.000", CultureInfo.InvariantCulture);
             CadData_GridView.CurrentCell.OwningRow.Cells["Y_machine"].Value = Cnc.CurrentY.ToString("0.000", CultureInfo.InvariantCulture);
             CadData_GridView.CurrentCell.OwningRow.Cells["X_nominal"].Value = dNomX.ToString("0.000", CultureInfo.InvariantCulture);
             CadData_GridView.CurrentCell.OwningRow.Cells["Y_nominal"].Value = dNomY.ToString("0.000", CultureInfo.InvariantCulture);
+            if(DownCamera.RotateCrossOn)
+            {
+                CadData_GridView.CurrentCell.OwningRow.Cells["Rotation_machine"].Value = DownCamera.RotateCrossAng.ToString("0.000", CultureInfo.InvariantCulture);
+                CadData_GridView.CurrentCell.OwningRow.Cells["Rotation"].Value = dNomA.ToString("0.000", CultureInfo.InvariantCulture);
+            }
+            DownCamera.RotateCrossAng = 0;
+            // The Place with manual cam will be waiting for the enter key.  Hitting the enter key will skip
+            // this update.  This indicates that the update is done and that it is time to move along
+            EnterKeyHit = true;
         }
 
         // =================================================================================
@@ -8828,6 +9471,8 @@ namespace LitePlacer
             }
             DownCamera.ArrowAngle = A;
             DownCamera.DrawArrow = true;
+            DownCamera.RotateCrossAng = A;
+            DownCamera.RotateCrossOn = true;
 
             //bool KnownComponent = ShowFootPrint_m(cell.OwningRow.Index);
             //ShowMessageBox(
@@ -8843,6 +9488,7 @@ namespace LitePlacer
         private void ShowMachine_button_Leave(object sender, EventArgs e)
         {
             DownCamera.DrawArrow = false;
+//            DownCamera.RotateCrossAng = 0;
         }
 
 
@@ -8913,7 +9559,7 @@ namespace LitePlacer
                 }
                 double dX = X_fid - X;
                 double dY = Y_fid - Y;
-                double Distance = Math.Sqrt(Math.Pow(dX, 2) + Math.Pow(dY, 2));
+                double Distance = CalcDist(dX, dY);
 
                 if (Distance < ShortestDistance)
                 {
@@ -10367,7 +11013,8 @@ namespace LitePlacer
             Test3_button.Text = "Adjust Place Here";
             Test4_button.Text = "Needle to up cam";
             Test5_button.Text = "Probe down";
-            Test6_button.Text = "Needle up";
+//            Test6_button.Text = "Needle up";
+            Test6_button.Text = "Test Mapping";
         }
 
         // test 1
@@ -10472,9 +11119,18 @@ namespace LitePlacer
         // test 6
         private void Test6_button_Click(object sender, EventArgs e)
         {
-            DisplayText("test 6: Needle up");
-            CNC_Z_m(0);  // go up
-            CNC_XY_m(Xmark, Ymark);
+            UseAffine = !UseAffine;
+            if (UseAffine)
+            {
+                DisplayText("Use Affine mapping");
+            }else
+            {
+                DisplayText("Use Homographic mapping");
+            }
+            //TestMapping();
+            //DisplayText("test 6: Needle up");
+            //CNC_Z_m(0);  // go up
+            //CNC_XY_m(Xmark, Ymark);
 
             // ShowMessageBox test
             //    Cnc_ReadyEvent.Reset();
